@@ -93,19 +93,19 @@ class Processor(threading.Thread):
         f = open(self.logfile, 'a')
         localtime = time.asctime(time.localtime(time.time()))
         if res == 1:
-            f.write("{} received command {}, sent to arduino.".format(self.pName, self.data))
+            f.write("{} received command {}, sent to arduino.\n".format(self.pName, self.data))
             f.close()
             return True
         elif res == 2:
-            f.write("{} received command {}, ran server config.".format(self.pName, self.data))
+            f.write("{} received command {}, ran server config.\n".format(self.pName, self.data))
             f.close()
             return True
         elif res == 3:
-            f.write("{} received command {}, began system shutdown.".format(self.pName, self.data))
+            f.write("{} received command {}, began system shutdown.\n".format(self.pName, self.data))
             f.close()
             return False
         else:
-            f.write("{} received command {}, unrecognized command.".format(self.pName, self.data))
+            f.write("{} received command {}, unrecognized command.\n".format(self.pName, self.data))
             f.close()
             return True
         
