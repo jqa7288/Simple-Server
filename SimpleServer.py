@@ -1,5 +1,5 @@
-#Simple TCP Server v0.1
-#Jacob Quick - 07/12/2016
+#Simple TCP Server v0.2
+#Jacob Quick - 07/19/2016
 ##VERSION NOTES: This is a simple, bare bones server script using multiple threads to handle
 ##incoming connections from multiple clients. The basic idea is that the handler class will accept
 ##an incoming connection, then pass the client socket object to the queue where the processor
@@ -12,6 +12,7 @@ import time
 import random
 import sys
 import socket
+import commands
 
 #Handler class will accept and route client socket objects (client) to the queue (q),
 #listening on the server socket (server). Also, the Handler will log connections/disconnections
@@ -47,13 +48,14 @@ class Handler(threading.Thread):
 
 class Processor(threading.Thread):
 
-    def __init__(self, q, logfile):
+    def __init__(self, q, logfile, flag):
         self.client = None
         self.q = q
         self.logfile = logfile
         self.pName = "Processor-1"
         self.data = None
         threading.Thread.__init__(self)
+        self.sdFlag = flag
 
     def run(self):
         flag = True
@@ -72,18 +74,19 @@ class Processor(threading.Thread):
                 self.data = None
 
         print("Server Shutting Down.")
-        sys.exit()
+        
             
 
     def process(self):
         data = self.data.upper()
         if data == "ARDUINO":
-            print("Placeholder Arduino Function!")
+            #commands.arduino(self.client)  ---- will call from future commands module
             return 1
         elif data == "SERVER":
-            print("Server configuration placeholder!")
+            #commands.server(self.client)  ---- will call from future commands module
             return 2
         elif data == "SHUTDOWN":
+            self.sdFlag.set()
             return 3
         else:
             print("Command Unrecognized")
@@ -116,6 +119,14 @@ class Processor(threading.Thread):
 serverLog = "ServerLog.txt"
 procLog = "ProcessLog.txt"
 
+##Create Shutdown Flag
+
+sdFlag = threading.Event()
+
+##Create thread list
+
+activeThreads = []
+
 ##Create main queue (max size arbitrarily set at 10 to prevent overfilling in error)
 
 mainq = queue.Queue(10)
@@ -127,11 +138,27 @@ port = 44444
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((addr, port))
 
-processor = Processor(mainq, procLog)
+
+
+processor = Processor(mainq, procLog, sdFlag)
 processor.start()
+
+activeThreads.append(processor)
+
 print("Processor ready...")
 s.listen(5)
 print("Listener starting at {} on port {}".format(addr, port))
 handler = Handler(mainq, s, serverLog)
 handler.start()
+
+activeThreads.append(handler)
+
+while True:
+    if sdFlag.is_set():
+        f = open("ServerLog.txt", "a")
+        lt = time.asctime(time.localtime(time.time()))
+        f.write("==========SERVER SHUTDOWN: {}=========".format(lt))
+        f.close()
+        sys.exit()
+        
         
