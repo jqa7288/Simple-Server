@@ -12,7 +12,7 @@ import time
 import random
 import sys
 import socket
-import commands
+#import commands --- commands module is WIP
 
 #Handler class will accept and route client socket objects (client) to the queue (q),
 #listening on the server socket (server). Also, the Handler will log connections/disconnections
